@@ -1,0 +1,55 @@
+Ensure SSH Directories
+	/home/ubuntu/.ssh
+		Copy SSH Key Files
+			- id_rsa
+			- id_rsa.pub
+			- config
+		
+Remove Default Host Entry
+	/etc/hosts
+		remove
+			127.0.0.1 fqdn
+		
+Ensure Hosts File
+	/etc/hosts
+		add
+			172.42.42.1  $master_fqdn
+			172.42.42.2  $node1_fqdn
+			172.42.42.3  $node2_fqdn
+
+Ensure Google Cloud Apt Key 
+	??
+Ensure Kubernetes Repository
+	??
+	
+Ensure Base Kubernetes
+	install
+		- docker.io
+		- kubelet
+		- kubeadm
+		- kubectl
+		- kubernetes-cni 
+
+		
+MASTER
+	Ensure kubeadm initialization
+		kubeadm init --api-advertise-addresses=172.42.42.1"
+		
+	fix weavenet error
+		install
+			- jq
+		Set --advertise-address flag in kube-apiserver static pod manifest
+			jq \
+				'.spec.containers[0].command |= .+ [\"--advertise-address=172.42.42.1\"]' \
+				/etc/kubernetes/manifests/kube-apiserver.json > /tmp/kube-apiserver.json 
+			mv /tmp/kube-apiserver.json /etc/kubernetes/manifests/kube-apiserver.json
+		Set --proxy-mode flag in kube-proxy daemonset
+			kubectl -n kube-system get ds -l 'component=kube-proxy-amd64' -o json \
+				| jq '.items[0].spec.template.spec.containers[0].command |= .+ [\"--proxy-mode=userspace\"]' \
+				| kubectl apply -f - && kubectl -n kube-system delete pods -l 'component=kube-proxy-amd64'
+				
+				
+	
+	
+	
+	
